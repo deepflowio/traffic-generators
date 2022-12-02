@@ -13,16 +13,6 @@
 ulimit -n 200000
 ```
 
-# 客户端增加 IP
-
-```bash
-ip addr add dev eth2 192.168.10.100/16
-ip addr add dev eth2 192.168.10.101/16
-ip addr add dev eth2 192.168.10.102/16
-ip addr add dev eth2 192.168.10.103/16
-ip addr add dev eth2 192.168.10.105/16
-```
-
 # 服务端配置
 
 ```bash
@@ -32,10 +22,32 @@ echo 1 > /proc/sys/net/ipv4/tcp_tw_recycle
 echo 0 > /proc/sys/net/ipv4/tcp_syncookies
 ```
 
+# 客户端、服务端增加 IP
+
+```bash
+# 客户端
+ip addr add dev eth2 192.168.10.100/16
+ip addr add dev eth2 192.168.10.101/16
+ip addr add dev eth2 192.168.10.102/16
+ip addr add dev eth2 192.168.10.103/16
+ip addr add dev eth2 192.168.10.104/16
+ip addr add dev eth2 192.168.10.105/16
+
+# 服务端
+ip addr add dev eth2 192.168.10.200/16
+ip addr add dev eth2 192.168.10.201/16
+ip addr add dev eth2 192.168.10.202/16
+ip addr add dev eth2 192.168.10.203/16
+ip addr add dev eth2 192.168.10.204/16
+ip addr add dev eth2 192.168.10.205/16
+```
+
 # 客户端运行
 
 ```bash
-./tcpclient 192.168.10.52 192.168.10.51,192.168.10.100,192.168.10.101,192.168.10.102,192.168.10.103,192.168.10.104,192.168.10.105
+./tcpclient \
+    192.168.10.52,192.168.10.200,192.168.10.201,192.168.10.202,192.168.10.203,192.168.10.204,192.168.10.205 \
+    192.168.10.51,192.168.10.100,192.168.10.101,192.168.10.102,192.168.10.103,192.168.10.104,192.168.10.105
 ```
 
 # 服务端运行

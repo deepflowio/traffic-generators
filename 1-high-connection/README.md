@@ -5,7 +5,7 @@
 - 每个 Flow 的生存时间超过 60 秒，使得产生 ForceReport
 - 接近 10K 的 PPS，即并不是每个 Flow 每一秒都有包，不制造 PPS 压力
 - 接近 1K/s 的新建 Flow 速率，且每秒开始时突发完成
-- 所有 Flow 的 (ClientIP, ServerIP, ServerPort) 不要有重复，制造指标数据的压力
+- 从 Flow 中提取的 (ClientIP, ServerIP, ServerPort) 基数够大，制造指标数据的压力
 
 # 客户端、服务端配置
 

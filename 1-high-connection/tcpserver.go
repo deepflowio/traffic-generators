@@ -13,7 +13,7 @@ import (
 // import "strings"
 
 const (
-	MIN_SERVER_PORT = 10000
+	MIN_SERVER_PORT = 20000
 	MAX_SERVER_PORT = 29999
 )
 

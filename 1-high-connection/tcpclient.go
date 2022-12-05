@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	MIN_SERVER_PORT  = 10000
+	MIN_SERVER_PORT  = 20000
 	MAX_SERVER_PORT  = 29999
 	NEW_FLOW_PER_SEC = 1000
 
@@ -74,18 +74,18 @@ func newConnection(dialer *net.Dialer, serverIp string, serverPort int) {
 
 func main() {
 	if len(os.Args) != 2 && len(os.Args) != 3 {
-		fmt.Printf("./tcpclient remote_addr [local_addr_1,local_addr_2,local_addr_3...]")
+		fmt.Printf("./tcpclient remote_addr_1,remote_addr_2,... [local_addr_1,local_addr_2...]")
 		return
 	}
 	setLimit()
 
-	serverIp := os.Args[1]
+	serverIps := strings.Split(os.Args[1], ",")
 	clientIps := []string{}
 	if len(os.Args) == 2 {
-		fmt.Printf("Dail %s\n", serverIp)
+		fmt.Printf("Dail %s\n", serverIps)
 	} else {
 		clientIps = strings.Split(os.Args[2], ",")
-		fmt.Printf("Dail %s from %s\n", serverIp, clientIps)
+		fmt.Printf("Dail %s from %s\n", serverIps, clientIps)
 	}
 
 	sleepCounter := 0
@@ -93,6 +93,7 @@ func main() {
 
 	dialer := &net.Dialer{}
 	clientIpIndex := 0
+	serverIpIndex := 0
 	if len(clientIps) > 0 {
 		dialer = &net.Dialer{
 			LocalAddr: &net.TCPAddr{IP: net.ParseIP(clientIps[clientIpIndex])},
@@ -108,14 +109,18 @@ func main() {
 					LocalAddr: &net.TCPAddr{IP: net.ParseIP(clientIps[clientIpIndex])},
 				}
 			}
+			if clientIpIndex == 0 {
+				serverIpIndex = (serverIpIndex + 1) % len(serverIps)
+			}
 		}
-		go newConnection(dialer, serverIp, serverPort)
+		go newConnection(dialer, serverIps[serverIpIndex], serverPort)
 
 		sleepCounter += 1
 		if sleepCounter >= NEW_FLOW_PER_SEC {
 			timeElapsed := time.Since(timeStart)
-			fmt.Printf("Create %d connections, clientIp %s, serverport %d-%d ~ %d, cost %v\n",
-				sleepCounter, clientIps[clientIpIndex], serverPort, sleepCounter, serverPort, timeElapsed)
+			fmt.Printf("Create %d connections, clientIp %s, serverIp %s, serverport %d-%d ~ %d, cost %v\n",
+				sleepCounter, clientIps[clientIpIndex], serverIps[serverIpIndex],
+				serverPort, sleepCounter, serverPort, timeElapsed)
 			if timeElapsed < time.Second {
 				time.Sleep(time.Second - timeElapsed)
 			}

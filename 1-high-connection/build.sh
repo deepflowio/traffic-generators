@@ -1,4 +1,4 @@
-# go build -o trafficgen main.go
+# build
 go build -o tcpserver tcpserver.go
 go build -o tcpclient tcpclient.go
 

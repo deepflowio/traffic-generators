@@ -13,8 +13,27 @@ import (
 // import "strings"
 
 const (
-	MIN_SERVER_PORT = 20000
-	MAX_SERVER_PORT = 29999
+	MIN_SERVER_PORT = 10000
+	MAX_SERVER_PORT = 14999
+
+	L7_PROTOCOL_UNKNOWN = 1
+	L7_PROTOCOL_HTTP    = 2
+)
+
+var (
+	l7Protocol          = L7_PROTOCOL_UNKNOWN
+	httpResponsePayload = `HTTP/1.1 200 OK
+Server: golang
+Date: Thu, 19 Jan 2023 03:26:42 GMT
+Content-Type: text/html
+Content-Length: 0
+Last-Modified: Mon, 07 Oct 2019 21:16:24 GMT
+Connection: keep-alive
+ETag: "5d9bab28-fd9"
+Accept-Ranges: bytes
+
+EOF
+`
 )
 
 func setLimit() {
@@ -57,12 +76,26 @@ func main() {
 				atomic.AddInt64(&liveConnection, 1)
 				atomic.AddUint64(&totalConnection, 1)
 				go func(serverPort int) {
+					reader := bufio.NewReader(conn)
 					for i := 0; ; i++ {
 						// will listen for message to process ending in newline (\n)
-						message, err := bufio.NewReader(conn).ReadString('\n')
-						if err != nil {
-							//fmt.Printf("Server #%d read %d failed ...: %s\n", serverPort, i, err.Error())
-							break
+						msg := ""
+						var err error
+						if l7Protocol == L7_PROTOCOL_UNKNOWN {
+							msg, err = reader.ReadString('\n')
+							if err != nil {
+								//fmt.Printf("Server #%d read %d failed ...: %s\n", serverPort, i, err.Error())
+								break
+							}
+						} else {
+							for msg != "EOF\n" {
+								msg, err = reader.ReadString('\n')
+								if err != nil {
+									//fmt.Printf("Server #%d read %d failed ...: %s\n", serverPort, i, err.Error())
+									break
+								}
+							}
+							msg = httpResponsePayload
 						}
 						// output message received
 						//fmt.Print("Message Received:", string(message))
@@ -71,7 +104,7 @@ func main() {
 						//newmessage := strings.ToUpper(message)
 
 						// send new string back to client
-						_, err = conn.Write([]byte(message + "\n"))
+						_, err = conn.Write([]byte(msg))
 						if err != nil {
 							//fmt.Printf("Server #%d write %d failed ...: %s\n", serverPort, i, err.Error())
 							break

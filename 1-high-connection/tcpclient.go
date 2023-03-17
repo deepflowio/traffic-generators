@@ -12,12 +12,28 @@ import (
 )
 
 const (
-	MIN_SERVER_PORT  = 20000
-	MAX_SERVER_PORT  = 29999
-	NEW_FLOW_PER_SEC = 1000
+	MIN_SERVER_PORT  = 10000
+	MAX_SERVER_PORT  = 14999
+	NEW_FLOW_PER_SEC = 800
 
 	REQUEST_PER_FLOW = 18
 	REQUEST_INTERVAL = 5 * time.Second
+
+	L7_PROTOCOL_UNKNOWN = 1
+	L7_PROTOCOL_HTTP    = 2
+)
+
+var (
+	l7Protocol         = L7_PROTOCOL_UNKNOWN
+	httpRequestPayload = `GET /index.html HTTP/1.1
+Host: high-connection-load-generator
+User-Agent: golang
+Accept-Encoding: gzip, deflate
+Accept: */*
+Connection: keep-alive
+
+EOF
+`
 )
 
 func setLimit() {
@@ -43,6 +59,7 @@ func newConnection(dialer *net.Dialer, serverIp string, serverPort int) {
 	}
 
 	// fmt.Printf("Request %d: local %s, remote %s\n", serverPort, conn.LocalAddr(), conn.RemoteAddr())
+	reader := bufio.NewReader(conn)
 	for i := 0; i < REQUEST_PER_FLOW; i++ {
 		// read in input from stdin
 		//reader := bufio.NewReader(os.Stdin)
@@ -50,7 +67,13 @@ func newConnection(dialer *net.Dialer, serverIp string, serverPort int) {
 		//text, _ := reader.ReadString('\n')
 
 		// send to socket
-		_, err = fmt.Fprintf(conn, "#"+strconv.Itoa(serverPort)+"-"+strconv.Itoa(i)+"\n")
+		msg := ""
+		if l7Protocol == L7_PROTOCOL_HTTP {
+			msg = httpRequestPayload
+		} else {
+			msg = "#" + strconv.Itoa(serverPort) + "-" + strconv.Itoa(i) + "\n"
+		}
+		_, err = fmt.Fprintf(conn, msg)
 		if err != nil {
 			fmt.Printf("Flow %s->#%d write (%d/%d, %v) failed ...: %s\n",
 				dialer.LocalAddr, serverPort, i+1, REQUEST_PER_FLOW, time.Since(startTime), err.Error())
@@ -58,11 +81,22 @@ func newConnection(dialer *net.Dialer, serverIp string, serverPort int) {
 		}
 
 		// listen for reply
-		_, err = bufio.NewReader(conn).ReadString('\n')
-		if err != nil {
-			fmt.Printf("Flow %s->#%d read (%d/%d, %v) failed ...: %s\n",
-				dialer.LocalAddr, serverPort, i+1, REQUEST_PER_FLOW, time.Since(startTime), err.Error())
-			break
+		if l7Protocol == L7_PROTOCOL_UNKNOWN {
+			msg, err = reader.ReadString('\n')
+			if err != nil {
+				fmt.Printf("Flow %s->#%d read (%d/%d, %v) failed ...: %s\n",
+					dialer.LocalAddr, serverPort, i+1, REQUEST_PER_FLOW, time.Since(startTime), err.Error())
+				break
+			}
+		} else {
+			for msg != "EOF\n" {
+				msg, err = reader.ReadString('\n')
+				if err != nil {
+					fmt.Printf("Flow %s->#%d read (%d/%d, %v) failed ...: %s\n",
+						dialer.LocalAddr, serverPort, i+1, REQUEST_PER_FLOW, time.Since(startTime), err.Error())
+					break
+				}
+			}
 		}
 		// fmt.Print("Message from server: " + message)
 
@@ -114,6 +148,7 @@ func main() {
 			}
 		}
 		go newConnection(dialer, serverIps[serverIpIndex], serverPort)
+		time.Sleep(time.Second / NEW_FLOW_PER_SEC / 3)
 
 		sleepCounter += 1
 		if sleepCounter >= NEW_FLOW_PER_SEC {

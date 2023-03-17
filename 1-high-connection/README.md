@@ -10,7 +10,7 @@
 # 客户端、服务端配置
 
 ```bash
-ulimit -n 200000
+ulimit -n 400000
 ```
 
 # 服务端配置
@@ -26,20 +26,20 @@ echo 0 > /proc/sys/net/ipv4/tcp_syncookies
 
 ```bash
 # 客户端
-ip addr add dev eth2 192.168.10.100/16
-ip addr add dev eth2 192.168.10.101/16
-ip addr add dev eth2 192.168.10.102/16
-ip addr add dev eth2 192.168.10.103/16
-ip addr add dev eth2 192.168.10.104/16
-ip addr add dev eth2 192.168.10.105/16
+ip addr add dev lo 192.168.10.100/24
+ip addr add dev lo 192.168.10.101/24
+ip addr add dev lo 192.168.10.102/24
+ip addr add dev lo 192.168.10.103/24
+ip addr add dev lo 192.168.10.104/24
+ip addr add dev lo 192.168.10.105/24
 
 # 服务端
-ip addr add dev eth2 192.168.10.200/16
-ip addr add dev eth2 192.168.10.201/16
-ip addr add dev eth2 192.168.10.202/16
-ip addr add dev eth2 192.168.10.203/16
-ip addr add dev eth2 192.168.10.204/16
-ip addr add dev eth2 192.168.10.205/16
+ip addr add dev lo 192.168.10.200/24
+ip addr add dev lo 192.168.10.201/24
+ip addr add dev lo 192.168.10.202/24
+ip addr add dev lo 192.168.10.203/24
+ip addr add dev lo 192.168.10.204/24
+ip addr add dev lo 192.168.10.205/24
 ```
 
 # 客户端运行

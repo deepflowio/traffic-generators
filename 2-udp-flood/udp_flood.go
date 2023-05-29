@@ -12,7 +12,7 @@ import (
 
 var (
 	fhost    = flag.String("h", "localhost", "Target host")
-	fport    = flag.Int("p", 53, "Target port")
+	fport    = flag.Int("p", 12345, "Target port")
 	fsize    = flag.Int("s", 16, "Data size")
 	frate    = flag.Int("r", 100000, "Packets per second")
 	fthreads = flag.Int("t", 1, "Number of threads")
